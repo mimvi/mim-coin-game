@@ -1,1 +1,122 @@
-index.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mim Coin Game</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:linear-gradient(150deg,#10152e,#25205a);
+ color:white;font-family:Arial;text-align:center;
+ min-height:100vh;padding:20px;
+}
+.container{max-width:420px;margin:auto}
+h1{color:#ffd700;font-size:30px}
+.card{
+ background:#292d50;padding:20px;
+ border-radius:18px;margin:15px 0;
+ box-shadow:0 5px 18px #0005;
+}
+.balance{font-size:32px;color:#ffd700;font-weight:bold}
+.coin{
+ width:175px;height:175px;border-radius:50%;
+ background:linear-gradient(145deg,#fff06b,#ff9900);
+ border:8px solid #ffe89b;
+ margin:25px auto;display:flex;
+ align-items:center;justify-content:center;
+ font-size:90px;cursor:pointer;
+ box-shadow:0 8px 25px #ffb00066;
+ user-select:none;
+}
+.coin:active{transform:scale(.93)}
+button{
+ width:100%;padding:15px;border:0;
+ border-radius:12px;background:#ffc400;
+ color:#211900;font-weight:bold;font-size:17px;
+ margin:8px 0;cursor:pointer;
+}
+button:disabled{opacity:.5}
+.small{color:#c8c8df;font-size:13px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🪙 MIM COIN</h1>
+<p>Tap and Collect Coins!</p>
+
+<div class="card">
+<p>Your Balance</p>
+<div class="balance"><span id="balance">0</span> 🪙</div>
+<p class="small">Total Earned: <span id="total">0</span></p>
+</div>
+
+<div class="coin" onclick="tapCoin()">🪙</div>
+<p>Tap the coin to earn!</p>
+
+<div class="card">
+<p>Daily Bonus 🎁</p>
+<button onclick="dailyBonus()">CLAIM 100 COINS</button>
+<p class="small" id="bonusStatus">Daily bonus available</p>
+</div>
+
+<div class="card">
+<p>Withdraw 💳</p>
+<input id="amount" type="number" placeholder="Enter coins"
+style="width:100%;padding:14px;border-radius:10px;border:0">
+<button onclick="withdraw()">REQUEST WITHDRAW</button>
+<p class="small" id="withdrawStatus">
+Demo only - No real money payment
+</p>
+</div>
+
+<p class="small">Mim Coin Game © 2026</p>
+</div>
+
+<script>
+let balance=Number(localStorage.getItem("mimBalance"))||0;
+let total=Number(localStorage.getItem("mimTotal"))||0;
+
+function update(){
+ document.getElementById("balance").textContent=balance;
+ document.getElementById("total").textContent=total;
+ localStorage.setItem("mimBalance",balance);
+ localStorage.setItem("mimTotal",total);
+}
+
+function tapCoin(){
+ balance++;
+ total++;
+ update();
+}
+
+function dailyBonus(){
+ let today=new Date().toDateString();
+ if(localStorage.getItem("mimBonus")===today){
+  document.getElementById("bonusStatus").textContent="Already claimed today!";
+  return;
+ }
+ balance+=100;
+ total+=100;
+ localStorage.setItem("mimBonus",today);
+ document.getElementById("bonusStatus").textContent="100 coins received!";
+ update();
+}
+
+function withdraw(){
+ let amount=Number(document.getElementById("amount").value);
+ let status=document.getElementById("withdrawStatus");
+ if(!amount||amount<=0){
+  status.textContent="Enter a valid amount!";
+ }else if(amount>balance){
+  status.textContent="Not enough coins!";
+ }else{
+  status.textContent="Demo only: Real withdrawals are not enabled.";
+ }
+}
+update();
+</script>
+</body>
+  </html>
+  
