@@ -1,14 +1,18 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <script src="https://ad.gigapub.tech/script?id=8970"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mim Coin Game</title>
+
+<script src="https://ad.gigapub.tech/script?id=8970"></script>
+
 <style>
 *{box-sizing:border-box}
 body{
- margin:0;background:linear-gradient(150deg,#10152e,#25205a);
+ margin:0;
+ background:linear-gradient(150deg,#10152e,#25205a);
  color:white;font-family:Arial;text-align:center;
  min-height:100vh;padding:20px;
 }
@@ -39,17 +43,40 @@ button{
 }
 button:disabled{opacity:.5}
 .small{color:#c8c8df;font-size:13px}
+[hidden]{display:none!important}
+#gate{
+ max-width:420px;margin:65px auto;
+ background:#292d50;padding:25px;
+ border-radius:18px;
+}
 </style>
 </head>
+
 <body>
-<div class="container">
+
+<div id="gate">
+<h1>🪙 MIM COIN</h1>
+<h3>Watch Video to Enter</h3>
+<p id="adStatus">Loading video advertisement...</p>
+<button id="retryButton" onclick="startAd()" disabled>
+PLEASE WAIT...
+</button>
+<p class="small">Watch the video to unlock the game.</p>
+</div>
+
+<div class="container" id="game" hidden>
+
 <h1>🪙 MIM COIN</h1>
 <p>Tap and Collect Coins!</p>
 
 <div class="card">
 <p>Your Balance</p>
-<div class="balance"><span id="balance">0</span> 🪙</div>
-<p class="small">Total Earned: <span id="total">0</span></p>
+<div class="balance">
+<span id="balance">0</span> 🪙
+</div>
+<p class="small">
+Total Earned: <span id="total">0</span>
+</p>
 </div>
 
 <div class="coin" onclick="tapCoin()">🪙</div>
@@ -58,12 +85,15 @@ button:disabled{opacity:.5}
 <div class="card">
 <p>Daily Bonus 🎁</p>
 <button onclick="dailyBonus()">CLAIM 100 COINS</button>
-<p class="small" id="bonusStatus">Daily bonus available</p>
+<p class="small" id="bonusStatus">
+Daily bonus available
+</p>
 </div>
 
 <div class="card">
 <p>Withdraw 💳</p>
-<input id="amount" type="number" placeholder="Enter coins"
+<input id="amount" type="number"
+placeholder="Enter coins"
 style="width:100%;padding:14px;border-radius:10px;border:0">
 <button onclick="withdraw()">REQUEST WITHDRAW</button>
 <p class="small" id="withdrawStatus">
@@ -77,12 +107,46 @@ Demo only - No real money payment
 <script>
 let balance=Number(localStorage.getItem("mimBalance"))||0;
 let total=Number(localStorage.getItem("mimTotal"))||0;
+let adStarted=false;
 
 function update(){
  document.getElementById("balance").textContent=balance;
  document.getElementById("total").textContent=total;
  localStorage.setItem("mimBalance",balance);
  localStorage.setItem("mimTotal",total);
+}
+
+async function startAd(){
+ if(adStarted) return;
+
+ const status=document.getElementById("adStatus");
+ const button=document.getElementById("retryButton");
+
+ if(typeof window.showGiga!=="function"){
+  status.textContent="Advertisement is not ready. Try again.";
+  button.disabled=false;
+  button.textContent="TRY AGAIN";
+  return;
+ }
+
+ adStarted=true;
+ button.disabled=true;
+ button.textContent="LOADING AD...";
+ status.textContent="Please watch the video...";
+
+ try{
+  await window.showGiga();
+
+  document.getElementById("gate").hidden=true;
+  document.getElementById("game").hidden=false;
+  update();
+
+ }catch(error){
+  status.textContent="Ad unavailable or not completed. Please try again.";
+  button.disabled=false;
+  button.textContent="WATCH VIDEO AGAIN";
+  adStarted=false;
+ }
 }
 
 function tapCoin(){
@@ -93,20 +157,26 @@ function tapCoin(){
 
 function dailyBonus(){
  let today=new Date().toDateString();
+
  if(localStorage.getItem("mimBonus")===today){
-  document.getElementById("bonusStatus").textContent="Already claimed today!";
+  document.getElementById("bonusStatus").textContent=
+  "Already claimed today!";
   return;
  }
+
  balance+=100;
  total+=100;
  localStorage.setItem("mimBonus",today);
- document.getElementById("bonusStatus").textContent="100 coins received!";
+
+ document.getElementById("bonusStatus").textContent=
+ "100 coins received!";
  update();
 }
 
 function withdraw(){
  let amount=Number(document.getElementById("amount").value);
  let status=document.getElementById("withdrawStatus");
+
  if(!amount||amount<=0){
   status.textContent="Enter a valid amount!";
  }else if(amount>balance){
@@ -115,8 +185,14 @@ function withdraw(){
   status.textContent="Demo only: Real withdrawals are not enabled.";
  }
 }
+
 update();
+
+// Automatically attempt to show an ad when the game opens
+window.addEventListener("load",()=>{
+ setTimeout(startAd,500);
+});
 </script>
+
 </body>
-  </html>
-  
+</html>
