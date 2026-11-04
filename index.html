@@ -56,12 +56,11 @@ button:disabled{opacity:.5}
 
 <div id="gate">
 <h1>🪙 MIM COIN</h1>
-<h3>Watch Video to Enter</h3>
-<p id="adStatus">Loading video advertisement...</p>
-<button id="retryButton" onclick="startAd()" disabled>
-PLEASE WAIT...
+<h3>Loading Game...</h3>
+<p id="adStatus">Please wait for advertisement...</p>
+<button id="retryButton" onclick="startAd()" hidden>
+TRY AGAIN
 </button>
-<p class="small">Watch the video to unlock the game.</p>
 </div>
 
 <div class="container" id="game" hidden>
@@ -107,7 +106,10 @@ Demo only - No real money payment
 <script>
 let balance=Number(localStorage.getItem("mimBalance"))||0;
 let total=Number(localStorage.getItem("mimTotal"))||0;
-let adStarted=false;
+
+let adInProgress=false;
+let gameStarted=false;
+let adTimer=null;
 
 function update(){
  document.getElementById("balance").textContent=balance;
@@ -116,37 +118,57 @@ function update(){
  localStorage.setItem("mimTotal",total);
 }
 
+function showGame(){
+ document.getElementById("gate").hidden=true;
+ document.getElementById("game").hidden=false;
+ gameStarted=true;
+ update();
+ scheduleAd();
+}
+
 async function startAd(){
- if(adStarted) return;
+ if(adInProgress) return;
+
+ adInProgress=true;
 
  const status=document.getElementById("adStatus");
  const button=document.getElementById("retryButton");
 
- if(typeof window.showGiga!=="function"){
-  status.textContent="Advertisement is not ready. Try again.";
-  button.disabled=false;
-  button.textContent="TRY AGAIN";
-  return;
- }
-
- adStarted=true;
- button.disabled=true;
- button.textContent="LOADING AD...";
- status.textContent="Please watch the video...";
+ if(button) button.hidden=true;
 
  try{
+  if(typeof window.showGiga!=="function"){
+   throw new Error("Ad SDK not ready");
+  }
+
+  status.textContent="Loading video advertisement...";
+
   await window.showGiga();
 
-  document.getElementById("gate").hidden=true;
-  document.getElementById("game").hidden=false;
-  update();
+  status.textContent="Advertisement finished!";
 
  }catch(error){
-  status.textContent="Ad unavailable or not completed. Please try again.";
-  button.disabled=false;
-  button.textContent="WATCH VIDEO AGAIN";
-  adStarted=false;
+  status.textContent="Advertisement unavailable. Game will continue.";
+ }finally{
+  adInProgress=false;
+
+  if(!gameStarted){
+   showGame();
+  }else{
+   scheduleAd();
+  }
  }
+}
+
+function scheduleAd(){
+ clearTimeout(adTimer);
+
+ if(!gameStarted) return;
+
+ // Wait 30 seconds after the previous ad attempt
+ adTimer=setTimeout(()=>{
+  startAd();
+ },30000);
 }
 
 function tapCoin(){
@@ -188,11 +210,12 @@ function withdraw(){
 
 update();
 
-// Automatically attempt to show an ad when the game opens
+// First advertisement when the game opens
 window.addEventListener("load",()=>{
- setTimeout(startAd,500);
+ setTimeout(startAd,1000);
 });
 </script>
 
 </body>
-</html>
+ </html>
+ 
